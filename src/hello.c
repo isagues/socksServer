@@ -30,7 +30,6 @@ typedef struct
 
 typedef hello_t *hello_p;
 
-
 typedef struct {
 
     int8_t (*methodHandler)(buffer);
@@ -39,41 +38,15 @@ typedef struct {
 
 auth_method_t *availableMethods;
 
-// int8_t stablishConnection(buffer_p b, hello_p h){ // -1 error 1 succes 0 continue
-
-//     state_t prevState;
-//     do {
-//         prevState = h->state;
-//         switch (h->state) {
-//             case READING:
-//                 int8_t readState = readHello(b, &(h->message));
-//                 if(readState == 1)
-//                 break;
-            
-//             default:
-//                 break;
-//         }
-//     } while (prevState != h->state);
-
-//     //Read hello
-
-//     //Check for commmont auth method
-
-//     //Auth process
-
-//     //Return
-// }
-
-
-int8_t readHello(buffer_p b, hello_message_t *m){ // -1 error 1 succes 0 continue
-
+int8_t readHello(buffer_p b, hello_message_t *m){ // -1 error 1 success 0 continue
 
     if(!buffer_can_read(b))
         return 0;
     
     size_t nbytes, i = 0;
     uint8_t *read_p = buffer_read_ptr(b, &nbytes);
-    while(i < nbytes || m->state != DONE ) {
+    
+    while(i < nbytes && m->state != DONE ) {
         switch (m->state) {
             
             case VERSION:
@@ -105,11 +78,31 @@ int8_t readHello(buffer_p b, hello_message_t *m){ // -1 error 1 succes 0 continu
                 return 1;
         }
     }
-
-    buffer_read_adv(b, i);
+    if(i != 0){
+        buffer_read_adv(b, i);
+    }
     if(m->state == DONE)
         return 1;
     return 0;
+}
+
+int8_t establishConnection(buffer_p b, hello_p h){ // -1 error 1 success 0 continue
+
+    switch (h->state) {
+        case READING:
+            return readHello(b, &(h->message));
+        
+        default:
+            break;
+    }
+
+    //Read hello
+
+    //Check for common auth method
+
+    //Auth process
+
+    //Return
 }
 
 hello_message_t newMessage(){
@@ -117,4 +110,24 @@ hello_message_t newMessage(){
     ans.state = VERSION;
     ans.methods_index = 0;
     return ans;
+}
+
+state_t initState(){
+    return READING;
+}
+
+hello_t newHello(){
+
+    hello_t ans;
+    ans.state = initState();
+    ans.message = newMessage();
+    return ans;
+}
+
+void printMessage(hello_message_t *m){
+
+    printf("Version: %x. Method count: %x\n", m->version, m->methodsCount);
+    for (size_t i = 0; i < m->methodsCount; i++){
+        printf("Method %ld: %x\n", i, m->methods[i]);
+    }
 }
