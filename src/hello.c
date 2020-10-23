@@ -95,7 +95,7 @@ int8_t establishConnection(buffer_p b, hello_p h){ // -1 error 1 success 0 conti
         default:
             break;
     }
-
+    return 0;
     //Read hello
 
     //Check for common auth method
